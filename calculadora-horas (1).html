@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Horas Trabalhadas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            100: '#1E293B',
+                            200: '#0F172A',
+                            300: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen py-8 transition-colors duration-200 dark:bg-dark-200 bg-gray-100">
+    <div class="container mx-auto px-4 max-w-md">
+        <!-- Botão de alternar tema -->
+        <button id="toggleTheme" class="mb-4 px-4 py-2 rounded-full bg-gray-200 dark:bg-dark-300 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-dark-100 transition-colors">
+            <span class="dark:hidden">🌙 Modo Escuro</span>
+            <span class="hidden dark:inline">☀️ Modo Claro</span>
+        </button>
+
+        <div class="bg-white dark:bg-dark-100 rounded-lg shadow-lg p-6 transition-colors duration-200">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">Calculadora de Horas Trabalhadas</h1>
+            
+            <form id="timeForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hora de Entrada:</label>
+                    <input type="time" id="entrada" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-300 dark:border-gray-600 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Saída para Almoço:</label>
+                    <input type="time" id="saidaAlmoco" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-300 dark:border-gray-600 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Retorno do Almoço:</label>
+                    <input type="time" id="retornoAlmoco" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-300 dark:border-gray-600 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hora de Saída:</label>
+                    <input type="time" id="saida" required class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-300 dark:border-gray-600 dark:text-white">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+                    Calcular
+                </button>
+            </form>
+
+            <div id="resultado" class="mt-6 p-4 bg-gray-50 dark:bg-dark-300 rounded-md hidden">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Resultado:</h2>
+                <div class="space-y-2">
+                    <p class="text-gray-600 dark:text-gray-300">Total de horas trabalhadas: <span id="totalHoras" class="font-medium text-gray-800 dark:text-white"></span></p>
+                    <p class="text-gray-600 dark:text-gray-300">Horas extras: <span id="horasExtras" class="font-medium text-gray-800 dark:text-white"></span></p>
+                    <p class="text-gray-600 dark:text-gray-300">Tempo de almoço: <span id="tempoAlmoco" class="font-medium text-gray-800 dark:text-white"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para alternar o tema
+        document.getElementById('toggleTheme').addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Verificar preferência salva
+        if (localStorage.theme === 'light') {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Cálculo das horas
+        document.getElementById('timeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Pegar valores dos inputs
+            const entrada = moment(document.getElementById('entrada').value, 'HH:mm');
+            const saidaAlmoco = moment(document.getElementById('saidaAlmoco').value, 'HH:mm');
+            const retornoAlmoco = moment(document.getElementById('retornoAlmoco').value, 'HH:mm');
+            const saida = moment(document.getElementById('saida').value, 'HH:mm');
+
+            // Calcular tempo de almoço
+            const tempoAlmocoMin = retornoAlmoco.diff(saidaAlmoco, 'minutes');
+            const tempoAlmocoHoras = Math.floor(tempoAlmocoMin / 60);
+            const tempoAlmocoMinutos = tempoAlmocoMin % 60;
+
+            // Calcular total de horas trabalhadas
+            const totalMinutos = saida.diff(entrada, 'minutes') - tempoAlmocoMin;
+            const horasTrabalhadas = Math.floor(totalMinutos / 60);
+            const minutosTrabalhados = totalMinutos % 60;
+
+            // Calcular horas extras (considerando 8h como jornada normal)
+            const minutosExtras = totalMinutos - (8 * 60);
+            const horasExtras = Math.floor(minutosExtras / 60);
+            const minutosExtras2 = minutosExtras % 60;
+
+            // Mostrar resultados
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('totalHoras').textContent = 
+                `${horasTrabalhadas}h${minutosTrabalhados > 0 ? ` ${minutosTrabalhados}min` : ''}`;
+            document.getElementById('horasExtras').textContent = 
+                minutosExtras > 0 ? `${horasExtras}h${minutosExtras2 > 0 ? ` ${minutosExtras2}min` : ''}` : 'Nenhuma';
+            document.getElementById('tempoAlmoco').textContent = 
+                `${tempoAlmocoHoras}h${tempoAlmocoMinutos > 0 ? ` ${tempoAlmocoMinutos}min` : ''}`;
+        });
+    </script>
+</body>
+</html>
